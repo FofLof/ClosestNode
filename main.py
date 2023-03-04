@@ -1,20 +1,14 @@
-import time
 import tkinter
 from tkinter import PhotoImage
-from typing import Optional, Union, Tuple
 
-import PIL.Image
 import customtkinter
-from tkinter import Label
-from tkinter import Label
-from PIL import ImageTk
+
 from PIL import Image
 from ntcore import NetworkTableInstance
 
 inst = NetworkTableInstance.getDefault()
 inst.startClient4("ClosestNode")
 inst.startServer()
-inst.setServer("127.0.0.1", NetworkTableInstance.kDefaultPort4)
 
 number = 0
 hasReset = False
@@ -27,11 +21,19 @@ class App(customtkinter.CTk):
         image = PhotoImage(file="teamLogo.png")
         self.iconphoto(False, image)
         self.resizable(height=None, width=None)
-        self.minsize(900, 100)
-        self.maxsize(900, 100)
+        self.minsize(900, 125)
+        self.maxsize(900, 125)
         self.title("ClosestNode")
 
         customtkinter.set_appearance_mode("dark")
+
+        global ipEntry
+        ipEntry = customtkinter.CTkEntry(master=self, placeholder_text="Enter IP:")
+        ipEntry.place(relx=0.5, rely=0.9, anchor=tkinter.CENTER)
+
+        global connectingLabel
+        connectingLabel = customtkinter.CTkLabel(master=self, text="Connecting...", font=("Exo", 20))
+        connectingLabel.place(relx = 0, rely = 0.85, anchor = tkinter.W)
 
         global nodes
         nodes = []
@@ -48,19 +50,27 @@ class App(customtkinter.CTk):
             nodes[x].grid(row=0, column=x)
 
 def task():
-    number = inst.getTable('SmartDashboard').getNumber("ClosestNode", -1)
-
-    global hasReset
-    if not number == -1:
-        hasReset = False
+    if not inst.isConnected():
         reset()
-        nodes[number].configure(image=customtkinter.CTkImage(
-                                                    dark_image=Image.open("yellow.png"),
-                                                    size=(100, 100)), text_color="black")
+        if len(ipEntry.get()) >= 9 and (
+                ipEntry.get() == "127.0.0.1" or ("10." in ipEntry.get() and ".2" in ipEntry.get())):
+            inst.setServer(ipEntry.get(), NetworkTableInstance.kDefaultPort4)
+        connectingLabel.configure(text="Connecting...")
     else:
-        if not hasReset:
+        connectingLabel.configure(text="Connected!")
+        number = inst.getTable('SmartDashboard').getNumber("ClosestNode", -1)
+
+        global hasReset
+        if not number == -1:
+            hasReset = False
             reset()
-            hasReset = True
+            nodes[int(number)].configure(image=customtkinter.CTkImage(
+                                                        dark_image=Image.open("yellow.png"),
+                                                        size=(100, 100)), text_color="black")
+        else:
+            if not hasReset:
+                reset()
+                hasReset = True
 
     app.after(100, task)
 
