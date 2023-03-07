@@ -57,6 +57,7 @@ def task():
             inst.setServer(ipEntry.get(), NetworkTableInstance.kDefaultPort4)
         connectingLabel.configure(text="Connecting...")
     else:
+        isRedAlliance = inst.getTable("FMSInfo").getBoolean("IsRedAlliance", False)
         connectingLabel.configure(text="Connected!")
         number = inst.getTable('SmartDashboard').getNumber("ClosestNode", -1)
 
@@ -64,9 +65,14 @@ def task():
         if not number == -1:
             hasReset = False
             reset()
-            nodes[int(number)].configure(image=customtkinter.CTkImage(
-                                                        dark_image=Image.open("yellow.png"),
-                                                        size=(100, 100)), text_color="black")
+            if isRedAlliance:
+                nodes[int(number)].configure(image=customtkinter.CTkImage(
+                    dark_image=Image.open("yellow.png"),
+                    size=(100, 100)), text_color="black")
+            else:
+                nodes[8-int(number)].configure(image=customtkinter.CTkImage(
+                                                            dark_image=Image.open("yellow.png"),
+                                                            size=(100, 100)), text_color="black")
         else:
             if not hasReset:
                 reset()
