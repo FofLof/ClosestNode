@@ -35,6 +35,28 @@ class App(customtkinter.CTk):
         connectingLabel = customtkinter.CTkLabel(master=self, text="Connecting...", font=("Exo", 20))
         connectingLabel.place(relx = 0, rely = 0.85, anchor = tkinter.W)
 
+
+        global gamePieceArray
+        gamePieceArray = []
+        gamePieceArray.append(customtkinter.CTkLabel(self,
+                                                image = customtkinter.CTkImage(
+                                                    dark_image= Image.open("greySquare.PNG"),
+                                                    size= (30,30)),
+                                                anchor=customtkinter.E,
+                                                text = ""))
+
+
+        gamePieceArray.append(customtkinter.CTkLabel(self,
+                                                image=customtkinter.CTkImage(
+                                                    dark_image=Image.open("greySquare.PNG"),
+                                                    size=(30, 30)),
+                                                anchor=customtkinter.E,
+                                                text=""))
+
+        gamePieceArray[0].place(relx = 0.86 + 0.05, rely = 0.8)
+        gamePieceArray[1].place(relx = 0.9 + 0.05, rely = 0.8)
+
+
         global nodes
         nodes = []
         for x in range(10):
@@ -51,6 +73,9 @@ class App(customtkinter.CTk):
 
 def task():
     if not inst.isConnected():
+        # print(inst.isConnected())
+        setColor('None', 0)
+        setColor('None', 1)
         reset()
         if len(ipEntry.get()) >= 9 and (
                 ipEntry.get() == "127.0.0.1" or ("10." in ipEntry.get() and ".2" in ipEntry.get())):
@@ -61,6 +86,16 @@ def task():
         connectingLabel.configure(text="Connected!")
         number = inst.getTable('SmartDashboard').getNumber("ClosestNode", -1)
 
+        firstGamePieceValue = inst.getTable('AdvantageKit/RealOutputs/ColorSensor').getString("GamePieceArray[0]", "")
+        secondGamePieceValue = inst.getTable('AdvantageKit/RealOutputs/ColorSensor').getString("GamePieceArray[1]", "")
+
+        # print(firstGamePieceValue)
+        # print(secondGamePieceValue)
+
+        setColor(firstGamePieceValue, 0)
+        setColor(secondGamePieceValue, 1)
+
+        # print(isRedAlliance)
         global hasReset
         if not number == -1:
             hasReset = False
@@ -86,6 +121,20 @@ def reset():
         nodes[x].configure(image=customtkinter.CTkImage(
             dark_image=Image.open("gray-removebg-preview.png"),
             size=(100, 100)), text_color="white")
+
+def setColor(color, position):
+    if color == "Cube":
+        gamePieceArray[position].configure(image = customtkinter.CTkImage(
+            dark_image=Image.open("purpleSquare.PNG")))
+    elif color == "Cone":
+        gamePieceArray[position].configure(image=customtkinter.CTkImage(
+            dark_image=Image.open("yellowSquare.PNG")))
+    else:
+       gamePieceArray[position].configure(image=customtkinter.CTkImage(
+            dark_image=Image.open("greySquare.PNG")))
+
+
+
 
 
 if __name__ == '__main__':
