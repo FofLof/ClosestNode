@@ -10,8 +10,16 @@ inst = NetworkTableInstance.getDefault()
 inst.startClient4("ClosestNode")
 inst.startServer()
 
+table = inst.getTable("LimelightVals")
+limelightTable = inst.getTable("limelight")
+
 number = 0
 hasReset = False
+
+limelightValReset = False
+
+tvPub = table.getDoubleTopic("tv").publish()
+botPosePub = table.getDoubleArrayTopic("botpose").publish()
 
 
 class App(customtkinter.CTk):
@@ -73,7 +81,10 @@ class App(customtkinter.CTk):
 
 def task():
     if not inst.isConnected():
-        # print(inst.isConnected())
+        global tvPub
+        global botPosePub
+        global limelightValReset
+        limelightValReset = False
         setColor('None', 0)
         setColor('None', 1)
         reset()
@@ -82,9 +93,18 @@ def task():
             inst.setServer(ipEntry.get(), NetworkTableInstance.kDefaultPort4)
         connectingLabel.configure(text="Connecting...")
     else:
+        if not limelightValReset:
+            tvPub.close()
+            botPosePub.close()
+            botPosePub = table.getDoubleArrayTopic("botpose").publish()
+            tvPub = table.getDoubleTopic("tv").publish()
+            limelightValReset = True
         isRedAlliance = inst.getTable("FMSInfo").getBoolean("IsRedAlliance", False)
         connectingLabel.configure(text="Connected!")
         number = inst.getTable('SmartDashboard').getNumber("ClosestNode", -1)
+
+        # print(inst.getTable('limelight').getNumber("tv", -1))
+        sendLimeLightValues()
 
         firstGamePieceValue = inst.getTable('AdvantageKit/RealOutputs/ColorSensor').getString("GamePieceArray[0]", "")
         secondGamePieceValue = inst.getTable('AdvantageKit/RealOutputs/ColorSensor').getString("GamePieceArray[1]", "")
@@ -114,7 +134,9 @@ def task():
                 hasReset = True
 
     app.after(100, task)
-
+def sendLimeLightValues():
+    tvPub.set(float(inst.getTable('limelight').getNumber("tv", -1)))
+    botPosePub.set(inst.getTable('limelight').getNumberArray("botpose", []))
 
 def reset():
     for x in range(9):
@@ -132,9 +154,6 @@ def setColor(color, position):
     else:
        gamePieceArray[position].configure(image=customtkinter.CTkImage(
             dark_image=Image.open("greySquare.PNG")))
-
-
-
 
 
 if __name__ == '__main__':
